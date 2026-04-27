@@ -9,6 +9,9 @@ const app = express();
 app.use(cors()); // Allows cross-origin requests from your React app
 app.use(express.json()); // Parses incoming JSON payloads
 
+const authRoutes = require('./routes/auth');
+app.use('/api/auth', authRoutes);
+
 // Database Connection
 const connectDB = async () => {
     try {
