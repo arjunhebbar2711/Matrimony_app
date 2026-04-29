@@ -12,6 +12,8 @@ app.use(express.json()); // Parses incoming JSON payloads
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
 
+const userRoutes = require('./routes/user');
+app.use('/api/user', userRoutes);
 // Database Connection
 const connectDB = async () => {
     try {

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { auth } from "../firebase";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -8,6 +9,7 @@ const Login = () => {
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   // 1. Setup the invisible reCAPTCHA
   const setupRecaptcha = () => {
@@ -68,12 +70,12 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        if (data.isNewUser) {
-          alert("Success! New user created in MongoDB. Welcome!");
-          // Next phase: Redirect to the Profile Setup form
+        // We check the database flag. If they haven't finished setting up, force them to the setup page.
+        if (data.user.isProfileComplete === false) {
+          navigate('/setup-profile');
         } else {
-          alert("Success! Welcome back to your dashboard.");
-          // Next phase: Redirect to the Dashboard
+          // If they already have a complete profile, send them to the main app
+          navigate('/dashboard');
         }
       } else {
         setError(data.message || "Backend authentication failed.");
