@@ -1,149 +1,134 @@
-import { useState } from "react";
-import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { auth } from "../firebase";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from 'react';
+import { auth } from '../firebase';
+import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [otp, setOtp] = useState("");
-  const [showOtpInput, setShowOtpInput] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [otp, setOtp] = useState('');
+  const [confirmationResult, setConfirmationResult] = useState(null);
   const navigate = useNavigate();
 
-  // 1. Setup the invisible reCAPTCHA
-  const setupRecaptcha = () => {
+  // Initialize the invisible Firebase reCAPTCHA
+  useEffect(() => {
     if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", {
-        size: "invisible",
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        size: 'invisible',
+        callback: (response) => {
+          // reCAPTCHA solved
+        }
       });
     }
-  };
+  }, []);
 
-  // 2. Handle sending the OTP
   const handleSendOtp = async (e) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
+
+    // 1. Check if they actually typed 10 digits
+    if (phoneNumber.length !== 10) {
+      alert("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    // 2. Secretly attach the +91 country code
+    const formattedPhoneNumber = "+91" + phoneNumber;
 
     try {
-      setupRecaptcha();
       const appVerifier = window.recaptchaVerifier;
-      // Ensure phone number has country code (e.g., +91 for India)
-      const formattedPhone = phoneNumber.startsWith("+") ? phoneNumber : `+91${phoneNumber}`;
+      // 3. Pass the formatted number to Firebase
+      const confirmation = await signInWithPhoneNumber(auth, formattedPhoneNumber, appVerifier);
       
-      const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
+      setConfirmationResult(confirmation);
+      alert("OTP Sent!");
       
-      // Save the result globally to verify later
-      window.confirmationResult = confirmationResult;
-      setShowOtpInput(true);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to send OTP. Please try again.");
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error("Error sending OTP:", error);
+      alert("Failed to send OTP. Please try again.");
     }
   };
 
-  // 3. Handle verifying the OTP & Sending to Backend
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
-    setError("");
-    setLoading(true);
-
     try {
-      const result = await window.confirmationResult.confirm(otp);
-      const user = result.user;
-      
-      // Get the secure token
-      const token = await user.getIdToken();
-      
-      // --- THE BRIDGE: Send token to our Node.js Backend ---
-      const response = await fetch('https://matrimony-api-prod.onrender.com/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ idToken: token })
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        // We check the database flag. If they haven't finished setting up, force them to the setup page.
-        if (data.user.isProfileComplete === false) {
-          navigate('/setup-profile');
-        } else {
-          // If they already have a complete profile, send them to the main app
-          navigate('/dashboard');
-        }
-      } else {
-        setError(data.message || "Backend authentication failed.");
-      }
-      
-    } catch (err) {
-      console.error(err);
-      setError("Invalid OTP or server error. Please try again.");
-    } finally {
-      setLoading(false);
+      await confirmationResult.confirm(otp);
+      alert("Login successful!");
+      navigate('/dashboard'); 
+    } catch (error) {
+      console.error("Error verifying OTP:", error);
+      alert("Invalid OTP. Please try again.");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">
-          Matrimony Portal
-        </h2>
+    <div className="min-h-screen bg-gray-50 flex flex-col pt-20 items-center font-sans">
+      <div className="w-full max-w-md bg-white p-8 rounded-lg border border-gray-200 shadow-sm mt-10">
         
-        {error && <div className="bg-red-100 text-red-600 p-3 rounded mb-4 text-sm">{error}</div>}
+        <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">
+          Welcome to Vadhu Vara Kendra
+        </h2>
 
-        {!showOtpInput ? (
-          <form onSubmit={handleSendOtp} className="space-y-4">
+        {/* If OTP hasn't been sent, show Phone Number form */}
+        {!confirmationResult ? (
+          <form onSubmit={handleSendOtp} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-              <input
-                type="tel"
-                placeholder="e.g. 9876543210"
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                required
-                className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
+              
+              {/* --- HERE IS THE UPDATED UI INPUT --- */}
+              <div className="flex border border-gray-300 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-teal-500">
+                <span className="bg-gray-50 px-4 py-2 text-gray-500 border-r border-gray-300 font-medium flex items-center">
+                  +91
+                </span>
+                <input 
+                  type="tel" 
+                  maxLength="10"
+                  placeholder="9876543210"
+                  value={phoneNumber} 
+                  onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))} // Strips out non-numbers
+                  className="w-full px-4 py-2 focus:outline-none" 
+                  required
+                />
+              </div>
+              {/* ---------------------------------- */}
+              
             </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50 transition"
+
+            <button 
+              type="submit" 
+              className="w-full bg-[#f26522] text-white py-2 px-4 rounded-lg font-medium hover:bg-orange-600 transition-colors shadow-sm"
             >
-              {loading ? "Sending..." : "Send OTP"}
+              Send OTP
             </button>
           </form>
         ) : (
-          <form onSubmit={handleVerifyOtp} className="space-y-4">
+          
+          /* If OTP HAS been sent, show Verification form */
+          <form onSubmit={handleVerifyOtp} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Enter 6-digit OTP</label>
-              <input
-                type="text"
+              <label className="block text-sm font-medium text-gray-700 mb-1">Enter OTP</label>
+              <input 
+                type="text" 
+                maxLength="6"
                 placeholder="123456"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
+                value={otp} 
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
+                className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-teal-500"
                 required
-                className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 tracking-widest text-center text-lg"
               />
+              <p className="text-xs text-gray-500 mt-2">Sent to +91 {phoneNumber}</p>
             </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 disabled:opacity-50 transition"
+
+            <button 
+              type="submit" 
+              className="w-full bg-teal-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-teal-700 transition-colors shadow-sm"
             >
-              {loading ? "Verifying..." : "Verify OTP"}
+              Verify & Login
             </button>
           </form>
         )}
-        
-        {/* Firebase requires this empty div for the invisible reCAPTCHA */}
+
+        {/* Required for Firebase to block bots */}
         <div id="recaptcha-container"></div>
+
       </div>
     </div>
   );
