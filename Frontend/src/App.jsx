@@ -2,18 +2,19 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Login from './components/Login';
 import ProfileSetup from './components/ProfileSetup';
 import Dashboard from './components/Dashboard';
+import ProfileDetail from './components/ProfileDetail'; 
+import EditProfile from './components/EditProfile';
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* base URL*/}
         <Route path="/" element={<Navigate to="/login" />} />
-        
-        {/* Our three main pages */}
         <Route path="/login" element={<Login />} />
         <Route path="/setup-profile" element={<ProfileSetup />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile/:id" element={<ProfileDetail />} />
+        <Route path="/edit-profile" element={<EditProfile />} />
       </Routes>
     </Router>
   );

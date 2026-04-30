@@ -5,15 +5,16 @@ const userSchema = new mongoose.Schema({
   phoneNumber: { type: String, required: true, unique: true },
   isProfileComplete: { type: Boolean, default: false },
 
-  // Basic Details
+ // Basic Details
   name: { type: String },
+  profileImage: { type: String, default: "" }, 
   gender: { type: String, enum: ['Male', 'Female', 'Other'] },
   dob: { type: Date },
   age: { type: Number }, 
   maritalStatus: { type: String, enum: ['Never Married', 'Divorced', 'Widowed', 'Awaiting Divorce'] },
   bloodGroup: { type: String },
-  height: { type: String }, // e.g., "5'8\"" or storing cm
-  weight: { type: Number }, // in kg
+  height: { type: String }, 
+  weight: { type: Number },
 
   // Astrology & Background
   pob: { type: String }, // Place of Birth
@@ -28,7 +29,7 @@ const userSchema = new mongoose.Schema({
   // Professional & Education
   education: { type: String }, // Filter: Education
   profession: { type: String }, // Filter: Profession
-  salary: { type: String }, // Filter: Income (Storing as String handles ranges like "10-15 LPA")
+  salary: { type: String, enum: ['0-5 LPA', '5-10 LPA', '10-20 LPA', '20+ LPA'] }, // Filter: Income
   languagesKnown: [{ type: String }], // Array for multiple languages
 
   // Family Details
@@ -49,7 +50,12 @@ const userSchema = new mongoose.Schema({
   },
   
   otherInformation: { type: String },
-  expectationPreference: { type: String }
+  expectationPreference: { type: String },
+
+  // --- Interaction Tracking (Option A) ---
+  shortlistedProfiles: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  interestedProfiles: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  viewedProfiles: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
 
 }, { 
   timestamps: true // Automatically adds createdAt and updatedAt dates
