@@ -26,7 +26,7 @@ const EditProfile = () => {
         if (!user) return;
         
         const token = await user.getIdToken();
-        const response = await fetch('http://localhost:5000/api/user/my-profile', {
+        const response = await fetch('https://matrimony-api-prod.onrender.com/api/user/my-profile', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -69,7 +69,7 @@ const EditProfile = () => {
       const token = await user.getIdToken();
 
       // We reuse the update-profile route you already built!
-      const response = await fetch('http://localhost:5000/api/user/update-profile', {
+      const response = await fetch('https://matrimony-api-prod.onrender.com/api/user/update-profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

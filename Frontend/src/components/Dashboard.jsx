@@ -27,7 +27,7 @@ const Dashboard = () => {
         
         const token = await user.getIdToken();
 
-        const response = await fetch('http://localhost:5000/api/user/matches', {
+        const response = await fetch('https://matrimony-api-prod.onrender.com/api/user/matches', {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -62,7 +62,7 @@ const Dashboard = () => {
       
       const token = await user.getIdToken();
 
-      const response = await fetch('http://localhost:5000/api/user/interact', {
+      const response = await fetch('https://matrimony-api-prod.onrender.com/api/user/interact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

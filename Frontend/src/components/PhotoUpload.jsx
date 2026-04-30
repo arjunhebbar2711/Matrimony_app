@@ -29,7 +29,7 @@ const PhotoUpload = ({ onUploadSuccess }) => {
       const formData = new FormData();
       formData.append('image', selectedFile);
 
-      const response = await fetch('http://localhost:5000/api/user/upload-photo', {
+      const response = await fetch('https://matrimony-api-prod.onrender.com/api/user/upload-photo', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

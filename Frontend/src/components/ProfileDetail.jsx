@@ -16,7 +16,7 @@ const ProfileDetail = () => {
         if (!user) return;
         
         const token = await user.getIdToken();
-        const response = await fetch(`http://localhost:5000/api/user/profile/${id}`, {
+        const response = await fetch(`https://matrimony-api-prod.onrender.com/api/user/profile/${id}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
 

@@ -39,7 +39,7 @@ const ProfileSetup = () => {
       
       const token = await user.getIdToken();
 
-      const response = await fetch('http://localhost:5000/api/user/update-profile', {
+      const response = await fetch('https://matrimony-api-prod.onrender.com/api/user/update-profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
