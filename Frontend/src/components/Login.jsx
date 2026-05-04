@@ -50,9 +50,30 @@ const Login = () => {
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     try {
-      await confirmationResult.confirm(otp);
-      alert("Login successful!");
-      navigate('/setup-profile'); 
+      // 1. Verify OTP with Firebase
+      const userCredential = await confirmationResult.confirm(otp);
+      const user = userCredential.user;
+      
+      // 2. Get the secure Firebase token
+      const token = await user.getIdToken();
+
+      // 3. Ask your Render backend: "Does this user have a complete profile?"
+      const response = await fetch('https://matrimony-api-prod.onrender.com/api/user/status', {
+          method: 'GET',
+          headers: {
+              'Authorization': `Bearer ${token}`
+          }
+      });
+
+      const data = await response.json();
+
+      // 4. The Traffic Cop: Route them to the correct page!
+      if (response.ok && data.isProfileComplete) {
+          navigate('/dashboard'); // Old user -> Dashboard
+      } else {
+          navigate('/setup-profile'); // New user -> Setup
+      }
+
     } catch (error) {
       console.error("Error verifying OTP:", error);
       alert("Invalid OTP. Please try again.");

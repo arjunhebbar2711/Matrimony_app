@@ -23,6 +23,26 @@ const verifyToken = async (req, res, next) => {
     }
 };
 
+// GET Route to check if user exists and profile is complete
+router.get('/status', verifyToken, async (req, res) => {
+    try {
+        // Look for the user by the phone number attached to the Firebase token
+        const user = await User.findOne({ phoneNumber: req.userPhone });
+        
+        if (!user) {
+            // User doesn't exist in MongoDB at all
+            return res.status(200).json({ isProfileComplete: false });
+        }
+
+        // User exists, tell the frontend if they finished setting up
+        return res.status(200).json({ isProfileComplete: user.isProfileComplete });
+
+    } catch (error) {
+        console.error("Error checking user status:", error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
+
 // The PUT Route to save the profile data
 router.put('/update-profile', verifyToken, async (req, res) => {
     try {
@@ -50,7 +70,7 @@ router.put('/update-profile', verifyToken, async (req, res) => {
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 });
-    
+
 // GET Route to fetch matches (NOW WITH DEEP FILTERING)
 router.get('/matches', verifyToken, async (req, res) => {
     try {
