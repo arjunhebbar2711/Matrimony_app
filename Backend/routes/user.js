@@ -35,7 +35,11 @@ router.put('/update-profile', verifyToken, async (req, res) => {
         const updatedUser = await User.findOneAndUpdate(
             { phoneNumber: req.userPhone },
             { $set: updateData },
-            { new: true } // This tells MongoDB to return the newly updated profile
+            { 
+                new: true, 
+                upsert: true,              
+                setDefaultsOnInsert: true
+            }
         );
 
         res.status(200).json({ success: true, user: updatedUser });
