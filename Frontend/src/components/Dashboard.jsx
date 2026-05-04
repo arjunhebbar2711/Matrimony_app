@@ -188,7 +188,7 @@ const Dashboard = () => {
             
             <div className="flex gap-2 mt-3 overflow-x-auto pb-2 items-center">
               
-              <button onClick={() => setShowFilterModal(true)} className="whitespace-nowrap px-4 py-1.5 rounded-full border border-gray-300 text-sm text-gray-700 bg-white hover:bg-gray-50 flex items-center gap-1">
+              <button onClick={() => setShowFilterModal(true)} className="cursor-pointer whitespace-nowrap px-4 py-1.5 rounded-full border border-gray-300 text-sm text-gray-700 bg-white hover:bg-gray-50 flex items-center gap-1">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                 Filter
               </button>
@@ -196,7 +196,7 @@ const Dashboard = () => {
               <div className="relative">
                 <button 
                   onClick={() => setIsSortOpen(!isSortOpen)} 
-                  className={`whitespace-nowrap px-4 py-1.5 rounded-full border text-sm transition-colors flex items-center gap-1 ${sortBy !== 'default' ? 'bg-teal-50 border-teal-500 text-teal-700 font-medium' : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'}`}
+                  className={`cursor-pointer whitespace-nowrap px-4 py-1.5 rounded-full border text-sm transition-colors flex items-center gap-1 ${sortBy !== 'default' ? 'bg-teal-50 border-teal-500 text-teal-700 font-medium' : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'}`}
                 >
                   {sortBy === 'default' ? 'Sort by' : sortBy === 'newest' ? 'Newest' : 'Oldest First'} ⌄
                 </button>
@@ -212,21 +212,21 @@ const Dashboard = () => {
 
               <button 
                 onClick={() => setShowNewlyJoined(!showNewlyJoined)} 
-                className={`whitespace-nowrap px-4 py-1.5 rounded-full border text-sm transition-colors ${showNewlyJoined ? 'bg-teal-50 border-teal-500 text-teal-700 font-medium' : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'}`}
+                className={`cursor-pointerwhitespace-nowrap px-4 py-1.5 rounded-full border text-sm transition-colors ${showNewlyJoined ? 'bg-teal-50 border-teal-500 text-teal-700 font-medium' : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'}`}
               >
                 Newly joined
               </button>
 
               <button 
                 onClick={() => setShowNotSeen(!showNotSeen)} 
-                className={`whitespace-nowrap px-4 py-1.5 rounded-full border text-sm transition-colors ${showNotSeen ? 'bg-teal-50 border-teal-500 text-teal-700 font-medium' : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'}`}
+                className={`cursor-pointer whitespace-nowrap px-4 py-1.5 rounded-full border text-sm transition-colors ${showNotSeen ? 'bg-teal-50 border-teal-500 text-teal-700 font-medium' : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'}`}
               >
                 Not seen
               </button>
 
               <button 
                 onClick={() => setShowWithPhoto(!showWithPhoto)} 
-                className={`whitespace-nowrap px-4 py-1.5 rounded-full border text-sm transition-colors ${showWithPhoto ? 'bg-teal-50 border-teal-500 text-teal-700 font-medium' : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'}`}
+                className={`cursor-pointer whitespace-nowrap px-4 py-1.5 rounded-full border text-sm transition-colors ${showWithPhoto ? 'bg-teal-50 border-teal-500 text-teal-700 font-medium' : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'}`}
               >
                 Profiles with photo
               </button>
