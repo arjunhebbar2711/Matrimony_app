@@ -4,6 +4,18 @@ import Navbar from './Navbar';
 import { useNavigate, Link } from 'react-router-dom';
 
 const Dashboard = () => {
+  // --- 1. ALL STATES LIVE INSIDE THE COMPONENT ---
+  
+  // Advanced Filter Modal States
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [deepFilters, setDeepFilters] = useState({
+    minAge: '',
+    maxAge: '',
+    maritalStatus: 'All',
+    gotra: '',
+    salary: 'All'
+  });
+
   // Sidebar State
   const [activeFilter, setActiveFilter] = useState('all');
   
@@ -22,14 +34,20 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchMatches = async () => {
       try {
-        setLoading(true); // Show loading state while fetching new filters
+        setLoading(true); 
         const user = auth.currentUser;
         if (!user) return;
         
         const token = await user.getIdToken();
 
-        // 1. THE FIX: Send the sorting and photo filter to the backend URL!
-        const url = `https://matrimony-api-prod.onrender.com/api/user/matches?sort=${sortBy}&hasPhoto=${showWithPhoto}`;
+        // Build the URL with Quick Filters AND Deep Filters
+        let url = `https://matrimony-api-prod.onrender.com/api/user/matches?sort=${sortBy}&hasPhoto=${showWithPhoto}`;
+        
+        if (deepFilters.minAge) url += `&minAge=${deepFilters.minAge}`;
+        if (deepFilters.maxAge) url += `&maxAge=${deepFilters.maxAge}`;
+        if (deepFilters.maritalStatus !== 'All') url += `&maritalStatus=${deepFilters.maritalStatus}`;
+        if (deepFilters.gotra) url += `&gotra=${deepFilters.gotra}`;
+        if (deepFilters.salary !== 'All') url += `&salary=${deepFilters.salary}`;
 
         const response = await fetch(url, {
           method: 'GET',
@@ -40,7 +58,6 @@ const Dashboard = () => {
 
         const data = await response.json();
 
-        // 2. THE FIX: The new backend returns an array directly, not an object. 
         if (response.ok) {
           setMatches(Array.isArray(data) ? data : data.matches || []);
         } else {
@@ -59,8 +76,8 @@ const Dashboard = () => {
 
     return () => unsubscribe();
     
-  // 3. THE FIX: Tell React to re-run this fetch when these buttons are clicked!
-  }, [sortBy, showWithPhoto]);
+  // --- 2. ADDED DEEPFILTERS TO DEPENDENCY ARRAY ---
+  }, [sortBy, showWithPhoto, deepFilters]);
 
   const handleInteraction = async (actionType, targetUserId) => {
     try {
@@ -81,7 +98,6 @@ const Dashboard = () => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Instantly update React state so the "Not seen" filter updates immediately
         setMatches(prevMatches => prevMatches.map(m => {
           if (m._id === targetUserId) {
             const key = actionType === 'shortlist' ? 'shortlistedByMe' : 
@@ -109,24 +125,19 @@ const Dashboard = () => {
     return age;
   };
 
-  // --- THE ADVANCED FILTER ENGINE ---
-  // --- THE ADVANCED FILTER ENGINE ---
   const getFilteredMatches = () => {
     let filtered = [...matches];
 
-    // 1. Apply Left Sidebar Activity Filter
     if (activeFilter === 'shortlistedByMe') filtered = filtered.filter(m => m.interactions?.shortlistedByMe);
     else if (activeFilter === 'viewedMe') filtered = filtered.filter(m => m.interactions?.viewedMe);
     else if (activeFilter === 'shortlistedMe') filtered = filtered.filter(m => m.interactions?.shortlistedMe);
     else if (activeFilter === 'viewedByMe') filtered = filtered.filter(m => m.interactions?.viewedByMe);
 
-    // 2. Apply Top Pill Quick Filters (Only the ones the backend isn't doing)
     if (showNotSeen) {
       filtered = filtered.filter(m => !m.interactions?.viewedByMe);
     }
 
     if (showNewlyJoined) {
-      // Show users whose account was created in the last 7 days
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       filtered = filtered.filter(m => new Date(m.createdAt) > sevenDaysAgo);
@@ -150,13 +161,11 @@ const Dashboard = () => {
               <p className="text-xs text-gray-600 mt-1">View all the profiles that match your preferences</p>
             </div>
             
-            {/* --- NEW: Link to Edit Profile Page --- */}
             <div className="p-4 border-b border-gray-100">
               <Link to="/edit-profile" className="w-full flex items-center justify-center gap-2 py-2 border border-teal-500 text-teal-600 rounded-lg text-sm font-medium hover:bg-teal-50 transition-colors">
                 <span>⚙️</span> Edit My Profile
               </Link>
             </div>
-            {/* ------------------------------------- */}
             
             <div className="p-4 space-y-4">
               <h4 className="font-semibold text-gray-800 text-sm">Based on activity</h4>
@@ -177,15 +186,13 @@ const Dashboard = () => {
               <span className="font-bold">{displayedMatches.length} Matches</span> based on your <span className="text-orange-500 hover:underline cursor-pointer">preferences</span>
             </h1>
             
-            {/* --- INTERACTIVE TOP PILL FILTERS --- */}
             <div className="flex gap-2 mt-3 overflow-x-auto pb-2 items-center">
               
-              <button onClick={() => alert("Advanced Deep Filter Modal coming soon!")} className="whitespace-nowrap px-4 py-1.5 rounded-full border border-gray-300 text-sm text-gray-700 bg-white hover:bg-gray-50 flex items-center gap-1">
+              <button onClick={() => setShowFilterModal(true)} className="whitespace-nowrap px-4 py-1.5 rounded-full border border-gray-300 text-sm text-gray-700 bg-white hover:bg-gray-50 flex items-center gap-1">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                 Filter
               </button>
               
-              {/* Sort Dropdown */}
               <div className="relative">
                 <button 
                   onClick={() => setIsSortOpen(!isSortOpen)} 
@@ -203,7 +210,6 @@ const Dashboard = () => {
                 )}
               </div>
 
-              {/* Quick Toggle Pills */}
               <button 
                 onClick={() => setShowNewlyJoined(!showNewlyJoined)} 
                 className={`whitespace-nowrap px-4 py-1.5 rounded-full border text-sm transition-colors ${showNewlyJoined ? 'bg-teal-50 border-teal-500 text-teal-700 font-medium' : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'}`}
@@ -284,6 +290,71 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
+
+      {/* --- 3. MODAL MOVED TO THE VERY BOTTOM, OUTSIDE THE LOOP --- */}
+      {showFilterModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
+            
+            <div className="flex justify-between items-center p-5 border-b border-gray-100 bg-gray-50">
+              <h3 className="font-bold text-gray-900 text-lg">Advanced Filters</h3>
+              <button onClick={() => setShowFilterModal(false)} className="text-gray-400 hover:text-gray-800 text-xl font-bold">✕</button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Age Range</label>
+                <div className="flex gap-4 items-center">
+                  <input type="number" placeholder="Min" value={deepFilters.minAge} onChange={(e) => setDeepFilters({...deepFilters, minAge: e.target.value})} className="w-full border border-gray-300 rounded-lg p-2 focus:ring-teal-500 focus:border-teal-500 outline-none" />
+                  <span className="text-gray-400">to</span>
+                  <input type="number" placeholder="Max" value={deepFilters.maxAge} onChange={(e) => setDeepFilters({...deepFilters, maxAge: e.target.value})} className="w-full border border-gray-300 rounded-lg p-2 focus:ring-teal-500 focus:border-teal-500 outline-none" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Marital Status</label>
+                <select value={deepFilters.maritalStatus} onChange={(e) => setDeepFilters({...deepFilters, maritalStatus: e.target.value})} className="w-full border border-gray-300 rounded-lg p-2 focus:ring-teal-500 focus:border-teal-500 outline-none bg-white">
+                  <option value="All">Any Status</option>
+                  <option value="Never Married">Never Married</option>
+                  <option value="Divorced">Divorced</option>
+                  <option value="Widowed">Widowed</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Gotra (Optional)</label>
+                <input type="text" placeholder="e.g. Kashyapa" value={deepFilters.gotra} onChange={(e) => setDeepFilters({...deepFilters, gotra: e.target.value})} className="w-full border border-gray-300 rounded-lg p-2 focus:ring-teal-500 focus:border-teal-500 outline-none" />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Annual Income</label>
+                <select value={deepFilters.salary} onChange={(e) => setDeepFilters({...deepFilters, salary: e.target.value})} className="w-full border border-gray-300 rounded-lg p-2 focus:ring-teal-500 focus:border-teal-500 outline-none bg-white">
+                  <option value="All">Any Income</option>
+                  <option value="0-5 LPA">0 - 5 LPA</option>
+                  <option value="5-10 LPA">5 - 10 LPA</option>
+                  <option value="10-20 LPA">10 - 20 LPA</option>
+                  <option value="20+ LPA">20+ LPA</option>
+                </select>
+              </div>
+              
+            </div>
+
+            <div className="p-5 border-t border-gray-100 bg-gray-50 flex gap-3 justify-end">
+              <button onClick={() => {
+                setDeepFilters({ minAge: '', maxAge: '', maritalStatus: 'All', gotra: '', salary: 'All' });
+              }} className="px-5 py-2 text-gray-600 font-medium hover:bg-gray-200 rounded-lg transition-colors">
+                Clear All
+              </button>
+              <button onClick={() => setShowFilterModal(false)} className="px-5 py-2 bg-teal-600 text-white font-medium hover:bg-teal-700 rounded-lg shadow-sm transition-colors">
+                Apply Filters
+              </button>
+            </div>
+            
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

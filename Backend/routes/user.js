@@ -50,41 +50,55 @@ router.put('/update-profile', verifyToken, async (req, res) => {
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 });
-
-// GET Route to fetch matches
+    
+// GET Route to fetch matches (NOW WITH DEEP FILTERING)
 router.get('/matches', verifyToken, async (req, res) => {
     try {
-        // 1. Find the logged-in user to know their gender
         const loggedInUser = await User.findOne({ phoneNumber: req.userPhone });
+        if (!loggedInUser) return res.status(404).json({ message: 'User not found' });
 
-        if (!loggedInUser) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        // 2. Define the opposite gender
         const oppositeGender = loggedInUser.gender === 'Male' ? 'Female' : 'Male';
+        let query = { gender: oppositeGender, isProfileComplete: true };
 
-        // 3. Build the core query: Opposite gender + Complete profiles
-        let query = {
-            gender: oppositeGender,
-            isProfileComplete: true 
-        };
-
-        // --- FILTERING LOGIC ---
-        // If the frontend asks for "Profiles with photo"
+        // --- 1. QUICK FILTERS ---
         if (req.query.hasPhoto === 'true') {
             query.profileImage = { $exists: true, $ne: "" }; 
         }
 
-        // --- SORTING LOGIC ---
-        let sortQuery = { createdAt: -1 }; // Default: Newest first (descending)
-        if (req.query.sort === 'oldest') {
-            sortQuery = { createdAt: 1 };  // Oldest first (ascending)
+        // --- 2. DEEP FILTERS (From the Modal) ---
+        // Marital Status
+        if (req.query.maritalStatus && req.query.maritalStatus !== 'All') {
+            query.maritalStatus = req.query.maritalStatus;
+        }
+        // Salary
+        if (req.query.salary && req.query.salary !== 'All') {
+            query.salary = req.query.salary;
+        }
+        // Gotra (Case-insensitive search)
+        if (req.query.gotra) {
+            query.gotra = { $regex: new RegExp(req.query.gotra, 'i') };
+        }
+        // Age Range (Translating Age to Date of Birth for MongoDB)
+        if (req.query.minAge || req.query.maxAge) {
+            query.dob = {};
+            const today = new Date();
+            if (req.query.minAge) {
+                const maxDate = new Date();
+                maxDate.setFullYear(today.getFullYear() - parseInt(req.query.minAge));
+                query.dob.$lte = maxDate; // Must be born BEFORE this date
+            }
+            if (req.query.maxAge) {
+                const minDate = new Date();
+                minDate.setFullYear(today.getFullYear() - parseInt(req.query.maxAge) - 1);
+                query.dob.$gt = minDate; // Must be born AFTER this date
+            }
         }
 
-        // 4. Fetch the matches using the query and sort logic!
-        const matches = await User.find(query).sort(sortQuery);
+        // --- 3. SORTING ---
+        let sortQuery = { createdAt: -1 }; 
+        if (req.query.sort === 'oldest') sortQuery = { createdAt: 1 };
 
+        const matches = await User.find(query).sort(sortQuery);
         res.status(200).json(matches);
 
     } catch (error) {
