@@ -51,50 +51,47 @@ router.put('/update-profile', verifyToken, async (req, res) => {
     }
 });
 
-// GET Route to fetch all matches WITH interaction data
+// GET Route to fetch matches
 router.get('/matches', verifyToken, async (req, res) => {
     try {
-        // 1. Get the currently logged-in user to see who they have interacted with
-        const currentUser = await User.findOne({ phoneNumber: req.userPhone });
-        if (!currentUser) return res.status(404).json({ message: 'User not found' });
+        // 1. Find the logged-in user to know their gender
+        const loggedInUser = await User.findOne({ phoneNumber: req.userPhone });
 
-        // 2. Fetch all other complete profiles. 
-        // We use .lean() to convert Mongoose documents into plain JavaScript objects so we can add new properties to them!
-        const matches = await User.find({ 
-            phoneNumber: { $ne: req.userPhone },
+        if (!loggedInUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // 2. Define the opposite gender
+        const oppositeGender = loggedInUser.gender === 'Male' ? 'Female' : 'Male';
+
+        // 3. Build the core query: Opposite gender + Complete profiles
+        let query = {
+            gender: oppositeGender,
             isProfileComplete: true 
-        }).lean();
+        };
 
-        // 3. Loop through the matches and attach the relationship status
-        const matchesWithInteractions = matches.map(match => {
-            
-            // Did I interact with them? (Convert ObjectIds to strings to compare safely)
-            const shortlistedByMe = currentUser.shortlistedProfiles?.some(id => id.toString() === match._id.toString()) || false;
-            const viewedByMe = currentUser.viewedProfiles?.some(id => id.toString() === match._id.toString()) || false;
-            
-            // Did they interact with me?
-            const shortlistedMe = match.shortlistedProfiles?.some(id => id.toString() === currentUser._id.toString()) || false;
-            const viewedMe = match.viewedProfiles?.some(id => id.toString() === currentUser._id.toString()) || false;
+        // --- FILTERING LOGIC ---
+        // If the frontend asks for "Profiles with photo"
+        if (req.query.hasPhoto === 'true') {
+            query.profileImage = { $exists: true, $ne: "" }; 
+        }
 
-            // Return the profile with the new interaction flags injected
-            return {
-                ...match,
-                interactions: {
-                    shortlistedByMe,
-                    viewedByMe,
-                    shortlistedMe,
-                    viewedMe
-                }
-            };
-        });
+        // --- SORTING LOGIC ---
+        let sortQuery = { createdAt: -1 }; // Default: Newest first (descending)
+        if (req.query.sort === 'oldest') {
+            sortQuery = { createdAt: 1 };  // Oldest first (ascending)
+        }
 
-        res.status(200).json({ success: true, matches: matchesWithInteractions });
+        // 4. Fetch the matches using the query and sort logic!
+        const matches = await User.find(query).sort(sortQuery);
+
+        res.status(200).json(matches);
+
     } catch (error) {
         console.error("Error fetching matches:", error);
-        res.status(500).json({ success: false, message: 'Server Error' });
+        res.status(500).json({ message: 'Server Error' });
     }
 });
-
 // POST Route: Handle Interactions (Shortlist, Interest, View)
 router.post('/interact', verifyToken, async (req, res) => {
     try {

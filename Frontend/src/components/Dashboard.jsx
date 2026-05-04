@@ -22,12 +22,16 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchMatches = async () => {
       try {
+        setLoading(true); // Show loading state while fetching new filters
         const user = auth.currentUser;
         if (!user) return;
         
         const token = await user.getIdToken();
 
-        const response = await fetch('https://matrimony-api-prod.onrender.com/api/user/matches', {
+        // 1. THE FIX: Send the sorting and photo filter to the backend URL!
+        const url = `https://matrimony-api-prod.onrender.com/api/user/matches?sort=${sortBy}&hasPhoto=${showWithPhoto}`;
+
+        const response = await fetch(url, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -36,8 +40,9 @@ const Dashboard = () => {
 
         const data = await response.json();
 
-        if (response.ok && data.success) {
-          setMatches(data.matches);
+        // 2. THE FIX: The new backend returns an array directly, not an object. 
+        if (response.ok) {
+          setMatches(Array.isArray(data) ? data : data.matches || []);
         } else {
           console.error("Failed to fetch matches:", data.message);
         }
@@ -53,7 +58,9 @@ const Dashboard = () => {
     });
 
     return () => unsubscribe();
-  }, []);
+    
+  // 3. THE FIX: Tell React to re-run this fetch when these buttons are clicked!
+  }, [sortBy, showWithPhoto]);
 
   const handleInteraction = async (actionType, targetUserId) => {
     try {
@@ -103,6 +110,7 @@ const Dashboard = () => {
   };
 
   // --- THE ADVANCED FILTER ENGINE ---
+  // --- THE ADVANCED FILTER ENGINE ---
   const getFilteredMatches = () => {
     let filtered = [...matches];
 
@@ -112,11 +120,7 @@ const Dashboard = () => {
     else if (activeFilter === 'shortlistedMe') filtered = filtered.filter(m => m.interactions?.shortlistedMe);
     else if (activeFilter === 'viewedByMe') filtered = filtered.filter(m => m.interactions?.viewedByMe);
 
-    // 2. Apply Top Pill Quick Filters
-    if (showWithPhoto) {
-      filtered = filtered.filter(m => m.profileImage && m.profileImage.trim() !== '');
-    }
-    
+    // 2. Apply Top Pill Quick Filters (Only the ones the backend isn't doing)
     if (showNotSeen) {
       filtered = filtered.filter(m => !m.interactions?.viewedByMe);
     }
@@ -126,15 +130,6 @@ const Dashboard = () => {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       filtered = filtered.filter(m => new Date(m.createdAt) > sevenDaysAgo);
-    }
-
-    // 3. Apply Sorting
-    if (sortBy === 'newest') {
-      filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    } else if (sortBy === 'age-asc') {
-      filtered.sort((a, b) => calculateAge(a.dob) - calculateAge(b.dob)); // Youngest first
-    } else if (sortBy === 'age-desc') {
-      filtered.sort((a, b) => calculateAge(b.dob) - calculateAge(a.dob)); // Oldest first
     }
 
     return filtered;
@@ -196,15 +191,14 @@ const Dashboard = () => {
                   onClick={() => setIsSortOpen(!isSortOpen)} 
                   className={`whitespace-nowrap px-4 py-1.5 rounded-full border text-sm transition-colors flex items-center gap-1 ${sortBy !== 'default' ? 'bg-teal-50 border-teal-500 text-teal-700 font-medium' : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'}`}
                 >
-                  {sortBy === 'default' ? 'Sort by' : sortBy === 'newest' ? 'Newest' : sortBy === 'age-asc' ? 'Youngest First' : 'Oldest First'} ⌄
+                  {sortBy === 'default' ? 'Sort by' : sortBy === 'newest' ? 'Newest' : 'Oldest First'} ⌄
                 </button>
                 
                 {isSortOpen && (
                   <div className="absolute top-full left-0 mt-1 w-40 bg-white border border-gray-200 shadow-xl rounded-lg py-2 z-10">
                     <button onClick={() => { setSortBy('default'); setIsSortOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-teal-50">Default</button>
                     <button onClick={() => { setSortBy('newest'); setIsSortOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-teal-50">Newest Joined</button>
-                    <button onClick={() => { setSortBy('age-asc'); setIsSortOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-teal-50">Age: Low to High</button>
-                    <button onClick={() => { setSortBy('age-desc'); setIsSortOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-teal-50">Age: High to Low</button>
+                    <button onClick={() => { setSortBy('oldest'); setIsSortOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-teal-50">Oldest First</button>
                   </div>
                 )}
               </div>
