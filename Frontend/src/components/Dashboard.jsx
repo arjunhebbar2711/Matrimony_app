@@ -212,7 +212,7 @@ const Dashboard = () => {
 
               <button 
                 onClick={() => setShowNewlyJoined(!showNewlyJoined)} 
-                className={`cursor-pointerwhitespace-nowrap px-4 py-1.5 rounded-full border text-sm transition-colors ${showNewlyJoined ? 'bg-teal-50 border-teal-500 text-teal-700 font-medium' : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'}`}
+                className={`cursor-pointer whitespace-nowrap px-4 py-1.5 rounded-full border text-sm transition-colors ${showNewlyJoined ? 'bg-teal-50 border-teal-500 text-teal-700 font-medium' : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'}`}
               >
                 Newly joined
               </button>
@@ -275,11 +275,11 @@ const Dashboard = () => {
                     </div>
 
                     <div className="mt-6 flex flex-wrap gap-3 sm:justify-end border-t border-gray-100 pt-4">
-                      <button className="flex-1 sm:flex-none px-6 py-2 border border-gray-300 text-gray-600 rounded-full text-sm font-medium hover:bg-gray-50 transition-colors">
+                      <button className="cursor-pointer flex-1 sm:flex-none px-6 py-2 border border-gray-300 text-gray-600 rounded-full text-sm font-medium hover:bg-gray-50 transition-colors">
                         ✕ Don't Show
                       </button>
                       
-                      <button onClick={() => handleInteraction('interest', match._id)} className="flex-1 sm:flex-none px-8 py-2 bg-[#f26522] text-white rounded-full text-sm font-medium hover:bg-orange-600 transition-colors shadow-sm">
+                      <button onClick={() => handleInteraction('interest', match._id)} className="cursor-pointer flex-1 sm:flex-none px-8 py-2 bg-[#f26522] text-white rounded-full text-sm font-medium hover:bg-orange-600 transition-colors shadow-sm">
                         ♡ Send Interest
                       </button>
                     </div>
@@ -343,10 +343,10 @@ const Dashboard = () => {
             <div className="p-5 border-t border-gray-100 bg-gray-50 flex gap-3 justify-end">
               <button onClick={() => {
                 setDeepFilters({ minAge: '', maxAge: '', maritalStatus: 'All', gotra: '', salary: 'All' });
-              }} className="px-5 py-2 text-gray-600 font-medium hover:bg-gray-200 rounded-lg transition-colors">
+              }} className="cursor-pointer px-5 py-2 text-gray-600 font-medium hover:bg-gray-200 rounded-lg transition-colors">
                 Clear All
               </button>
-              <button onClick={() => setShowFilterModal(false)} className="px-5 py-2 bg-teal-600 text-white font-medium hover:bg-teal-700 rounded-lg shadow-sm transition-colors">
+              <button onClick={() => setShowFilterModal(false)} className="cursor-pointer px-5 py-2 bg-teal-600 text-white font-medium hover:bg-teal-700 rounded-lg shadow-sm transition-colors">
                 Apply Filters
               </button>
             </div>
