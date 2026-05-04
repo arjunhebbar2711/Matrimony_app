@@ -52,7 +52,7 @@ const Login = () => {
     try {
       await confirmationResult.confirm(otp);
       alert("Login successful!");
-      navigate('/profile-setup'); 
+      navigate('/setup-profile'); 
     } catch (error) {
       console.error("Error verifying OTP:", error);
       alert("Invalid OTP. Please try again.");
